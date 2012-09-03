@@ -202,7 +202,7 @@ class FieldCollectionItemEntity extends Entity {
     if (!empty($this->is_new)) {
       $this->hostEntityType = $entity_type;;
       $this->hostEntity = $entity;
-      $this->langcode = LANGUAGE_NONE;
+      $this->langcode = $langcode;
       list($this->hostEntityId) = entity_extract_ids($this->hostEntityType, $this->hostEntity);
       // If the host entity is not saved yet, set the id to FALSE. So
       // fetchHostDetails() does not try to load the host entity details.
@@ -646,12 +646,12 @@ function field_collection_field_get_path($field) {
  * may be used to seamlessly create field collection items during host-entity
  * creation or to save changes to the host entity and its collections at once.
  */
-function field_collection_field_presave($entity_type, $entity, $field, $instance, $langcode, &$items) {
+function field_collection_field_presave($entity_type, $entity, $field, $instance, $langcode = LANGUAGE_NONE, &$items) {
   foreach ($items as &$item) {
     // In case the entity has been loaded / created, save it and set the id.
     if (isset($item['entity'])) {
       if (!empty($item['entity']->is_new)) {
-        $item['entity']->setHostEntity($entity_type, $entity, LANGUAGE_NONE, FALSE);
+        $item['entity']->setHostEntity($entity_type, $entity, $langcode, FALSE);
       }
       $item['entity']->save(TRUE);
       $item = array('value' => $item['entity']->item_id);
@@ -943,13 +943,13 @@ function field_collection_field_formatter_view($entity_type, $entity, $field, $i
 /**
  * Helper function to add links to a field collection field.
  */
-function field_collection_field_formatter_links(&$element, $entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+function field_collection_field_formatter_links(&$element, $entity_type, $entity, $field, $instance, $langcode == LANGUAGE_NONE, $items, $display) {
   $settings = $display['settings'];
 
   if ($settings['add'] && ($field['cardinality'] == FIELD_CARDINALITY_UNLIMITED || count($items) < $field['cardinality'])) {
     // Check whether the current is allowed to create a new item.
     $field_collection_item = entity_create('field_collection_item', array('field_name' => $field['field_name']));
-    $field_collection_item->setHostEntity($entity_type, $entity, LANGUAGE_NONE, FALSE);
+    $field_collection_item->setHostEntity($entity_type, $entity, $langcode, FALSE);
 
     if (field_collection_item_access('create', $field_collection_item)) {
       $path = field_collection_field_get_path($field);
